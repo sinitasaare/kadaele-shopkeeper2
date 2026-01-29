@@ -1,0 +1,122 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Build web assets
+      run: npm run build
+    
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+    
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+    
+    - name: Install Capacitor CLI
+      run: npm install -g @capacitor/cli
+    
+    - name: Add Android platform
+      run: npx cap add android || echo "Android platform already exists"
+    
+    - name: Sync Capacitor
+      run: npx cap sync android
+    
+    - name: Grant execute permission for gradlew
+      run: chmod +x android/gradlew
+    
+    - name: Build debug APK
+      run: |
+        cd android
+        ./gradlew assembleDebug --stacktrace
+    
+    - name: Get version info
+      id: version
+      run: |
+        echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+        echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+    
+    - name: Rename APK
+      run: |
+        mkdir -p apk-output
+        cp android/app/build/outputs/apk/debug/app-debug.apk \
+           apk-output/kadaele-pos-${{ steps.version.outputs.date }}-${{ steps.version.outputs.sha }}.apk
+        cp android/app/build/outputs/apk/debug/app-debug.apk \
+           apk-output/kadaele-pos-latest.apk
+    
+    - name: Upload APK (with date and commit)
+      uses: actions/upload-artifact@v4
+      with:
+        name: kadaele-pos-${{ steps.version.outputs.date }}-${{ steps.version.outputs.sha }}
+        path: apk-output/kadaele-pos-${{ steps.version.outputs.date }}-${{ steps.version.outputs.sha }}.apk
+        retention-days: 90
+    
+    - name: Upload APK (latest)
+      uses: actions/upload-artifact@v4
+      with:
+        name: kadaele-pos-latest
+        path: apk-output/kadaele-pos-latest.apk
+        retention-days: 90
+    
+    - name: Display APK info
+      run: |
+        echo "✅ APK built successfully!"
+        echo "📱 APK Location: android/app/build/outputs/apk/debug/app-debug.apk"
+        ls -lh apk-output/
+        echo ""
+        echo "📦 Download from the 'Artifacts' section below"
+    
+    - name: Create Release (on tag)
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          apk-output/kadaele-pos-latest.apk
+          apk-output/kadaele-pos-${{ steps.version.outputs.date }}-${{ steps.version.outputs.sha }}.apk
+        body: |
+          ## Kadaele POS Android APK
+          
+          📱 **Installation**: Download the APK and install on your Android device
+          
+          ### What's New
+          - Built from commit ${{ steps.version.outputs.sha }}
+          - Build date: ${{ steps.version.outputs.date }}
+          
+          ### Download
+          - `kadaele-pos-latest.apk` - Main APK file
+          
+          ### Requirements
+          - Android 6.0 (API 23) or higher
+          - Enable "Install from Unknown Sources"
+          
+          ### Features
+          - ✅ Cash Register with offline support
+          - ✅ Sales Record management
+          - ✅ Debtors tracking
+          - ✅ Inventory view
+          - ✅ Camera for credit sales documentation
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
