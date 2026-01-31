@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Package, AlertTriangle, TrendingUp, Info } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, Package, AlertTriangle, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import dataService from '../services/dataService';
 import './Inventory.css';
@@ -10,23 +10,13 @@ function Inventory() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredItems, setFilteredItems] = useState([]);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     applyFilters();
   }, [goods, inventory, searchTerm]);
 
-  const loadData = async () => {
-    const goodsData = await dataService.getGoods();
-    const inventoryData = await dataService.getInventory();
-    setGoods(goodsData);
-    setInventory(inventoryData);
-  };
-
   const applyFilters = () => {
-    // Combine goods with inventory data
     const combined = goods.map(good => {
       const inventoryItem = inventory.find(inv => inv.itemId === good.id);
       return {
@@ -36,7 +26,6 @@ function Inventory() {
       };
     });
 
-    // Apply search filter
     let filtered = combined;
     if (searchTerm) {
       filtered = filtered.filter(item =>
@@ -46,23 +35,6 @@ function Inventory() {
     }
 
     setFilteredItems(filtered);
-  };
-
-  const getTotalItems = () => {
-    return filteredItems.length;
-  };
-
-  const getTotalStock = () => {
-    return filteredItems.reduce((sum, item) => sum + item.stockLevel, 0);
-  };
-
-  const getLowStockCount = () => {
-    // Consider items with less than 10 units as low stock
-    return filteredItems.filter(item => item.stockLevel > 0 && item.stockLevel < 10).length;
-  };
-
-  const getOutOfStockCount = () => {
-    return filteredItems.filter(item => item.stockLevel === 0).length;
   };
 
   const getStockStatus = (stockLevel) => {
@@ -75,63 +47,105 @@ function Inventory() {
     }
   };
 
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+
+      // Assume data has `goods` and `inventory` arrays
+      setGoods(data.goods || []);
+      setInventory(data.inventory || []);
+    } catch (error) {
+      console.error('Import error:', error);
+      alert('Failed to import database. Please check the file format.');
+    }
+  };
+
+  const handleExportClick = async () => {
+    const data = {
+      goods,
+      inventory,
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `inventory-database-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
-  <div className="inventory">
-    {/* Sticky header and search */}
-    <div className="inventory-header">
-      <div>
-        <h2 className="screen-title">Inventory</h2>
-        <p className="screen-subtitle">View current stock levels (Read-only)</p>
+    <div className="inventory">
+      {/* Sticky header with buttons */}
+      <div className="inventory-header">
+        <div>
+          <h2 className="screen-title">Inventory</h2>
+          <p className="screen-subtitle">View current stock levels (Read-only)</p>
+        </div>
+        <div className="header-actions">
+          <button className="btn btn-import" onClick={handleImportClick}>
+            Import Database
+          </button>
+          <button className="btn btn-export" onClick={handleExportClick}>
+            Export Database
+          </button>
+        </div>
       </div>
-      <div className="search-box">
-        <Search size={18} />
-        <input
-          type="text"
-          className="input-field"
-          placeholder="Search items..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
-    </div>
 
-    <div className="info-banner">
-      <Info size={20} />
-      <div>
-        <p className="banner-title">Stock Management Coming Soon</p>
-        <p className="banner-text">
-          This screen currently shows stock levels for reference only. Automatic stock updates
-          when sales are made will be added in a future version.
-        </p>
-      </div>
-    </div>
+      {/* Hidden file input */}
+      <input
+        type="file"
+        accept=".json"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        style={{ display: 'none' }}
+      />
 
-    {/* Table wrapper with sticky header */}
-    {filteredItems.length === 0 ? (
-      <div className="card empty-state">
-        <Package size={64} />
-        <h3>No items found</h3>
-        <p>Add products in your goods catalogue to see them here.</p>
-      </div>
-    ) : (
-      <div className="card">
-        <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Item Name</th>
-                <th>Category</th>
-                <th>Price</th>
-                <th>Stock Level</th>
-                <th>Status</th>
-                <th>Last Updated</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredItems.map(item => {
-                const status = getStockStatus(item.stockLevel);
-                return (
-                  <tr key={item.id}>
+      {/* Table */}
+      {filteredItems.length === 0 ? (
+        <div className="card empty-state">
+          <Package size={64} />
+          <h3>No items found</h3>
+          <p>Import a database to see items here.</p>
+        </div>
+      ) : (
+        <div className="card">
+          <div className="search-box">
+            <Search size={18} />
+            <input
+              type="text"
+              className="input-field"
+              placeholder="Search items..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Item Name</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Stock Level</th>
+                  <th>Status</th>
+                  <th>Last Updated</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredItems.map(item => {
+                  const status = getStockStatus(item.stockLevel);
+                  return (
+                    <tr key={item.id}>
                     <td className="item-name">{item.name}</td>
                     <td>{item.category || 'General'}</td>
                     <td className="item-price">${item.price.toFixed(2)}</td>
@@ -152,14 +166,15 @@ function Inventory() {
                         : 'Never'}
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
-    )}
-  </div>
-);
+      )}
+    </div>
+  );
 }
+
 export default Inventory;
