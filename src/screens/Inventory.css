@@ -1,15 +1,32 @@
+/* Main container */
 .inventory {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  height: 100vh;
+  overflow: hidden;
 }
 
+/* Sticky header and search */
 .inventory-header {
+  flex-shrink: 0;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
   flex-wrap: wrap;
+  background: white;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.screen-title {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--text-primary);
 }
 
 .screen-subtitle {
@@ -18,6 +35,35 @@
   margin-top: 0.25rem;
 }
 
+/* Search box */
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+}
+
+.search-box svg {
+  color: var(--text-secondary);
+}
+
+.input-field {
+  border: none;
+  outline: none;
+  font-size: 0.95rem;
+  background: transparent;
+  padding: 0;
+  flex: 1;
+}
+
+.input-field::placeholder {
+  color: var(--text-secondary);
+}
+
+/* Info banner */
 .info-banner {
   background-color: #dbeafe;
   color: #1e40af;
@@ -45,16 +91,60 @@
   opacity: 0.9;
 }
 
+/* Table wrapper with horizontal scroll only */
+.card {
+  flex: 1;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  background: white;
+}
+
+.table-container {
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-height: 100%;
+}
+
+/* Table styles */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+  background: white;
+}
+
+th,
+td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  background-color: #f1f3f5;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+/* Item name */
 .item-name {
   font-weight: 600;
   color: var(--text-primary);
 }
 
+/* Price */
 .item-price {
   font-weight: 600;
   color: var(--primary-color);
 }
 
+/* Stock level badge */
 .stock-level {
   font-weight: 600;
 }
@@ -83,6 +173,7 @@
   color: #991b1b;
 }
 
+/* Status badge */
 .status-badge {
   display: inline-flex;
   align-items: center;
@@ -108,15 +199,21 @@
   color: #991b1b;
 }
 
+/* Last updated */
 .last-updated {
   color: var(--text-secondary);
   font-size: 0.875rem;
 }
 
+/* Responsive */
 @media (max-width: 768px) {
   .inventory-header {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .search-box {
+    width: 100%;
   }
 
   .info-banner {
