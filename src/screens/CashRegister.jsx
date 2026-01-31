@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Minus, Trash2, Camera, DollarSign, CreditCard, X, Check } from 'lucide-react';
 import { Camera as CapCamera } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import dataService from '../services/dataService';
@@ -7,14 +6,15 @@ import './CashRegister.css';
 
 function CashRegister() {
   const [goods, setGoods] = useState([]);
-  const [basket, setBasket] = useState([]);
-  const [paymentType, setPaymentType] = useState('cash');
+  const [catalogue, setCatalogue] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showResults, setShowResults] = useState(false);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
-  const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [repaymentDate, setRepaymentDate] = useState('');
+  const [showCashPopup, setShowCashPopup] = useState(false);
+  const [showCreditModal, setShowCreditModal] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [notification, setNotification] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
@@ -28,47 +28,91 @@ function CashRegister() {
 
   const filteredGoods = goods.filter(good =>
     good.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ).slice(0, 5);
 
-  const addToBasket = (good) => {
-    const existing = basket.find(item => item.id === good.id);
+  const addToCatalogue = (good) => {
+    const existing = catalogue.find(item => item.id === good.id);
     if (existing) {
-      setBasket(basket.map(item =>
+      setCatalogue(catalogue.map(item =>
         item.id === good.id
-          ? { ...item, quantity: item.quantity + 1 }
+          ? { ...item, qty: item.qty + 1 }
           : item
       ));
     } else {
-      setBasket([...basket, { ...good, quantity: 1 }]);
+      setCatalogue([...catalogue, { ...good, qty: 1 }]);
     }
+    setSearchTerm('');
+    setShowResults(false);
   };
 
-  const updateQuantity = (id, delta) => {
-    setBasket(basket.map(item => {
-      if (item.id === id) {
-        const newQuantity = item.quantity + delta;
-        return newQuantity > 0 ? { ...item, quantity: newQuantity } : item;
-      }
-      return item;
-    }).filter(item => item.quantity > 0));
+  const updateQuantity = (id, newQty) => {
+    const qty = parseInt(newQty, 10);
+    if (isNaN(qty) || qty < 1) return;
+    
+    setCatalogue(catalogue.map(item =>
+      item.id === id ? { ...item, qty } : item
+    ));
   };
 
-  const removeFromBasket = (id) => {
-    setBasket(basket.filter(item => item.id !== id));
+  const removeFromCatalogue = (id) => {
+    setCatalogue(catalogue.filter(item => item.id !== id));
   };
 
   const calculateTotal = () => {
-    return basket.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    return catalogue.reduce((sum, item) => sum + (item.price * item.qty), 0);
   };
 
-  const showNotification = (message, type = 'success') => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification(null), 4000);
+  const handlePayCash = async () => {
+    if (catalogue.length === 0) {
+      alert('Cart is empty.');
+      return;
+    }
+    setShowCashPopup(true);
+  };
+
+  const confirmCashPayment = async () => {
+    setIsProcessing(true);
+    setShowCashPopup(false);
+
+    try {
+      const total = calculateTotal();
+      const items = catalogue.map(item => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.qty,
+        subtotal: item.price * item.qty,
+      }));
+
+      await dataService.addPurchase({
+        items,
+        total,
+        paymentType: 'cash',
+        customerName: '',
+        customerPhone: '',
+        photoUrl: null,
+      });
+
+      alert(`Cash payment confirmed. Total: $${total.toFixed(2)}`);
+      setCatalogue([]);
+    } catch (error) {
+      console.error('Payment error:', error);
+      alert('Payment failed. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handlePayCredit = () => {
+    if (catalogue.length === 0) {
+      alert('Cart is empty.');
+      return;
+    }
+    setShowCreditModal(true);
   };
 
   const takeCreditPhoto = async () => {
     if (!Capacitor.isNativePlatform()) {
-      // For web/desktop, use file input
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = 'image/*';
@@ -85,7 +129,6 @@ function CashRegister() {
       };
       input.click();
     } else {
-      // For mobile, use Capacitor Camera
       try {
         const image = await CapCamera.getPhoto({
           quality: 70,
@@ -94,42 +137,23 @@ function CashRegister() {
         });
         setCapturedPhoto(image.dataUrl);
       } catch (error) {
-        showNotification('Could not capture photo. Please try again.', 'error');
+        alert('Could not capture photo. Please try again.');
       }
     }
   };
 
-  const handleSubmitPayment = async () => {
-    if (basket.length === 0) {
-      showNotification('Please add items to the basket first.', 'error');
-      return;
-    }
-
-    if (paymentType === 'credit' && (!customerName || !customerPhone)) {
-      showNotification('Please enter customer name and phone for credit sales.', 'error');
-      return;
-    }
-
-    if (paymentType === 'credit' && !capturedPhoto) {
-      const confirm = window.confirm(
-        'No photo of Credit Sales Book entry was taken. Do you want to proceed without a photo?'
-      );
-      if (!confirm) {
-        setShowPhotoModal(true);
-        return;
-      }
-    }
-
+  const confirmCreditSale = async (e) => {
+    e.preventDefault();
     setIsProcessing(true);
 
     try {
       const total = calculateTotal();
-      const items = basket.map(item => ({
+      const items = catalogue.map(item => ({
         id: item.id,
         name: item.name,
         price: item.price,
-        quantity: item.quantity,
-        subtotal: item.price * item.quantity,
+        quantity: item.qty,
+        subtotal: item.price * item.qty,
       }));
 
       let photoUrl = null;
@@ -138,300 +162,251 @@ function CashRegister() {
           photoUrl = await dataService.savePhoto(capturedPhoto, Date.now().toString());
         } catch (error) {
           console.error('Photo save error:', error);
-          showNotification('Warning: Photo could not be saved.', 'warning');
         }
       }
 
-      const purchase = await dataService.addPurchase({
+      await dataService.addPurchase({
         items,
         total,
-        paymentType,
-        customerName: paymentType === 'credit' ? customerName : '',
-        customerPhone: paymentType === 'credit' ? customerPhone : '',
+        paymentType: 'credit',
+        customerName,
+        customerPhone,
         photoUrl,
       });
 
-      showNotification(
-        paymentType === 'cash'
-          ? `Sale completed! Total: $${total.toFixed(2)}`
-          : `Credit sale recorded for ${customerName}. Total: $${total.toFixed(2)}`,
-        'success'
-      );
-
-      // Reset form
-      setBasket([]);
+      alert(`Debtor: ${customerName}\nRepayment Date: ${repaymentDate}\nCredit sale recorded.`);
+      
+      setCatalogue([]);
       setCustomerName('');
       setCustomerPhone('');
+      setRepaymentDate('');
       setCapturedPhoto(null);
-      setPaymentType('cash');
+      setShowCreditModal(false);
     } catch (error) {
-      console.error('Payment error:', error);
-      showNotification(
-        navigator.onLine
-          ? 'Payment failed. Please try again.'
-          : 'No internet. Your sale is saved locally and will sync when online.',
-        navigator.onLine ? 'error' : 'info'
-      );
+      console.error('Credit sale error:', error);
+      alert('Failed to record credit sale. Please try again.');
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const clearBasket = () => {
-    if (basket.length > 0) {
-      const confirm = window.confirm('Are you sure you want to clear the basket?');
-      if (confirm) {
-        setBasket([]);
-        setCapturedPhoto(null);
-      }
-    }
-  };
-
   return (
-    <div className="cash-register">
-      <div className="register-header">
-        <h2 className="screen-title">Cash Register</h2>
-        {basket.length > 0 && (
-          <button className="btn btn-outline" onClick={clearBasket}>
-            <Trash2 size={18} />
-            Clear Basket
-          </button>
-        )}
+    <div className="container">
+      {/* Header */}
+      <div className="header">
+        <h1>Cash Register</h1>
       </div>
 
-      {notification && (
-        <div className={`alert alert-${notification.type}`}>
-          {notification.type === 'success' && <Check size={20} />}
-          {notification.type === 'error' && <X size={20} />}
-          <span>{notification.message}</span>
-        </div>
-      )}
-
-      <div className="register-layout">
-        <div className="goods-panel">
-          <div className="panel-header">
-            <h3>Products</h3>
-            <input
-              type="text"
-              className="input-field"
-              placeholder="Search products..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-
-          <div className="goods-grid">
-            {filteredGoods.map(good => (
-              <div key={good.id} className="good-card" onClick={() => addToBasket(good)}>
-                <div className="good-info">
-                  <h4 className="good-name">{good.name}</h4>
-                  <p className="good-category">{good.category}</p>
-                </div>
-                <div className="good-price">${good.price.toFixed(2)}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="basket-panel">
-          <div className="panel-header">
-            <h3>Current Sale</h3>
-          </div>
-
-          {basket.length === 0 ? (
-            <div className="empty-basket">
-              <ShoppingCart size={48} />
-              <p>No items in basket</p>
-              <p className="empty-subtitle">Click on products to add them</p>
-            </div>
-          ) : (
-            <>
-              <div className="basket-items">
-                {basket.map(item => (
-                  <div key={item.id} className="basket-item">
-                    <div className="item-info">
-                      <h4 className="item-name">{item.name}</h4>
-                      <p className="item-price">${item.price.toFixed(2)} each</p>
-                    </div>
-                    <div className="item-controls">
-                      <button
-                        className="quantity-btn"
-                        onClick={() => updateQuantity(item.id, -1)}
-                      >
-                        <Minus size={16} />
-                      </button>
-                      <span className="quantity">{item.quantity}</span>
-                      <button
-                        className="quantity-btn"
-                        onClick={() => updateQuantity(item.id, 1)}
-                      >
-                        <Plus size={16} />
-                      </button>
-                      <button
-                        className="remove-btn"
-                        onClick={() => removeFromBasket(item.id)}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                    <div className="item-subtotal">
-                      ${(item.price * item.quantity).toFixed(2)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="payment-section">
-                <div className="total-section">
-                  <span className="total-label">Total:</span>
-                  <span className="total-amount">${calculateTotal().toFixed(2)}</span>
-                </div>
-
-                <div className="payment-type">
-                  <button
-                    className={`payment-btn ${paymentType === 'cash' ? 'active' : ''}`}
-                    onClick={() => setPaymentType('cash')}
-                  >
-                    <DollarSign size={20} />
-                    Cash
-                  </button>
-                  <button
-                    className={`payment-btn ${paymentType === 'credit' ? 'active' : ''}`}
-                    onClick={() => setPaymentType('credit')}
-                  >
-                    <CreditCard size={20} />
-                    Credit
-                  </button>
-                </div>
-
-                {paymentType === 'credit' && (
-                  <div className="credit-details">
-                    <input
-                      type="text"
-                      className="input-field"
-                      placeholder="Customer Name *"
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
-                    />
-                    <input
-                      type="tel"
-                      className="input-field"
-                      placeholder="Customer Phone *"
-                      value={customerPhone}
-                      onChange={(e) => setCustomerPhone(e.target.value)}
-                    />
-                    <button
-                      className="btn btn-outline"
-                      onClick={() => setShowPhotoModal(true)}
-                    >
-                      <Camera size={18} />
-                      {capturedPhoto ? 'Retake Photo' : 'Take Photo of Credit Sales Book'}
-                    </button>
-                    {capturedPhoto && (
-                      <div className="photo-preview">
-                        <img src={capturedPhoto} alt="Credit book entry" />
-                        <button
-                          className="remove-photo"
-                          onClick={() => setCapturedPhoto(null)}
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <button
-                  className="btn btn-primary btn-submit"
-                  onClick={handleSubmitPayment}
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? (
-                    <>
-                      <div className="spinner" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <Check size={20} />
-                      Submit Payment
-                    </>
-                  )}
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {showPhotoModal && (
-        <div className="modal-overlay" onClick={() => setShowPhotoModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Credit Sales Book Entry</h3>
-              <button className="close-btn" onClick={() => setShowPhotoModal(false)}>
-                <X size={20} />
-              </button>
-            </div>
-            <div className="modal-content">
-              <p className="modal-description">
-                Please take a photo of the written entry in your Credit Sales Book.
-                This will help with record keeping and dispute resolution.
-              </p>
-              {capturedPhoto ? (
-                <div className="photo-display">
-                  <img src={capturedPhoto} alt="Credit book entry" />
-                  <button className="btn btn-secondary" onClick={takeCreditPhoto}>
-                    <Camera size={18} />
-                    Retake Photo
-                  </button>
-                </div>
+      {/* Scrollable Catalogue */}
+      <div className="catalogue-area">
+        <div className="catalogue-wrapper">
+          <table className="catalogue-table">
+            <thead>
+              <tr>
+                <th>Qty</th>
+                <th>Item</th>
+                <th>Price</th>
+                <th>Total</th>
+                <th>Edit</th>
+              </tr>
+            </thead>
+            <tbody>
+              {catalogue.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="catalogue-empty">
+                    Catalogue is empty
+                  </td>
+                </tr>
               ) : (
-                <button className="btn btn-primary" onClick={takeCreditPhoto}>
-                  <Camera size={20} />
-                  Take Photo
-                </button>
+                catalogue.map(item => (
+                  <tr key={item.id}>
+                    <td className="qty-cell">
+                      <input
+                        type="number"
+                        value={item.qty}
+                        onChange={(e) => updateQuantity(item.id, e.target.value)}
+                        min="1"
+                      />
+                    </td>
+                    <td>{item.name}</td>
+                    <td className="price-cell">${item.price.toFixed(2)}</td>
+                    <td className="total-cell">${(item.price * item.qty).toFixed(2)}</td>
+                    <td className="edit-cell">
+                      <button onClick={() => removeFromCatalogue(item.id)}>×</button>
+                    </td>
+                  </tr>
+                ))
               )}
-            </div>
-            <div className="modal-footer">
-              <button
-                className="btn btn-outline"
-                onClick={() => setShowPhotoModal(false)}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Bottom Section */}
+      <div className="bottom-section">
+        <div className="cart-total">
+          <span>Total:</span>
+          <span className="total-amount">{calculateTotal().toFixed(2)}</span>
+        </div>
+        <div className="payment-buttons">
+          <button 
+            className="btn-pay-cash" 
+            onClick={handlePayCash}
+            disabled={isProcessing}
+          >
+            Pay with Cash
+          </button>
+          <button 
+            className="btn-pay-credit" 
+            onClick={handlePayCredit}
+            disabled={isProcessing}
+          >
+            Buy on Credit
+          </button>
+        </div>
+      </div>
+
+      {/* Search Section */}
+      <section className="search-section">
+        <input
+          type="text"
+          className="search-input"
+          placeholder="Type to search goods..."
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setShowResults(e.target.value.trim().length > 0);
+          }}
+          onFocus={() => setShowResults(searchTerm.trim().length > 0)}
+        />
+        {showResults && (
+          <div className="results-list">
+            {filteredGoods.length === 0 ? (
+              <div className="result-item">No matching goods</div>
+            ) : (
+              filteredGoods.map(good => (
+                <div
+                  key={good.id}
+                  className="result-item"
+                  onClick={() => addToCatalogue(good)}
+                >
+                  {good.name} - ${good.price.toFixed(2)}
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </section>
+
+      {/* Cash Payment Popup */}
+      {showCashPopup && (
+        <div className="popup-overlay active">
+          <div className="popup">
+            <h3>Confirm Payment</h3>
+            <p>Are you sure you want to proceed with this cash payment?</p>
+            <div className="popup-buttons">
+              <button 
+                className="popup-btn popup-btn-cancel" 
+                onClick={() => setShowCashPopup(false)}
               >
                 Cancel
               </button>
-              <button
-                className="btn btn-primary"
-                onClick={() => setShowPhotoModal(false)}
-                disabled={!capturedPhoto}
+              <button 
+                className="popup-btn popup-btn-confirm" 
+                onClick={confirmCashPayment}
               >
-                Done
+                Confirm
               </button>
             </div>
           </div>
         </div>
       )}
-    </div>
-  );
-}
 
-// Placeholder icon for empty basket
-function ShoppingCart({ size }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="9" cy="21" r="1" />
-      <circle cx="20" cy="21" r="1" />
-      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-    </svg>
+      {/* Credit Sale Modal */}
+      {showCreditModal && (
+        <div className="modal-overlay active">
+          <div className="modal">
+            <h3>Buy on Credit</h3>
+            <form className="modal-form" onSubmit={confirmCreditSale}>
+              <div>
+                <label htmlFor="debtor-name">Debtor Name:</label>
+                <input
+                  type="text"
+                  id="debtor-name"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="debtor-phone">Debtor Phone:</label>
+                <input
+                  type="tel"
+                  id="debtor-phone"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="repayment-date">Repayment Date:</label>
+                <input
+                  type="date"
+                  id="repayment-date"
+                  value={repaymentDate}
+                  onChange={(e) => setRepaymentDate(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label>Photo of Credit Book (Optional):</label>
+                <button 
+                  type="button" 
+                  className="photo-btn"
+                  onClick={takeCreditPhoto}
+                >
+                  {capturedPhoto ? '📷 Retake Photo' : '📷 Take Photo'}
+                </button>
+                {capturedPhoto && (
+                  <div className="photo-preview-small">
+                    <img src={capturedPhoto} alt="Credit book" />
+                  </div>
+                )}
+              </div>
+              <div className="modal-buttons">
+                <button
+                  type="button"
+                  className="modal-btn modal-btn-cancel"
+                  onClick={() => {
+                    setShowCreditModal(false);
+                    setCustomerName('');
+                    setCustomerPhone('');
+                    setRepaymentDate('');
+                    setCapturedPhoto(null);
+                  }}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="modal-btn modal-btn-save">
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Click outside to close search results */}
+      {showResults && (
+        <div 
+          className="search-backdrop" 
+          onClick={() => {
+            setShowResults(false);
+            setSearchTerm('');
+          }}
+        />
+      )}
+    </div>
   );
 }
 
