@@ -76,131 +76,90 @@ function Inventory() {
   };
 
   return (
-    <div className="inventory">
-      <div className="inventory-header">
-        <div>
-          <h2 className="screen-title">Inventory</h2>
-          <p className="screen-subtitle">View current stock levels (Read-only)</p>
-        </div>
-        <div className="search-box">
-          <Search size={18} />
-          <input
-            type="text"
-            className="input-field"
-            placeholder="Search items..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
+  <div className="inventory">
+    {/* Sticky header and search */}
+    <div className="inventory-header">
+      <div>
+        <h2 className="screen-title">Inventory</h2>
+        <p className="screen-subtitle">View current stock levels (Read-only)</p>
       </div>
-
-      <div className="info-banner">
-        <Info size={20} />
-        <div>
-          <p className="banner-title">Stock Management Coming Soon</p>
-          <p className="banner-text">
-            This screen currently shows stock levels for reference only. Automatic stock updates
-            when sales are made will be added in a future version.
-          </p>
-        </div>
+      <div className="search-box">
+        <Search size={18} />
+        <input
+          type="text"
+          className="input-field"
+          placeholder="Search items..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
       </div>
-
-      <div className="summary-cards">
-        <div className="summary-card">
-          <div className="summary-icon" style={{ backgroundColor: '#dbeafe' }}>
-            <Package size={24} color="#1e40af" />
-          </div>
-          <div className="summary-content">
-            <p className="summary-label">Total Items</p>
-            <p className="summary-value">{getTotalItems()}</p>
-          </div>
-        </div>
-
-        <div className="summary-card">
-          <div className="summary-icon" style={{ backgroundColor: '#d1fae5' }}>
-            <TrendingUp size={24} color="#065f46" />
-          </div>
-          <div className="summary-content">
-            <p className="summary-label">Total Stock</p>
-            <p className="summary-value">{getTotalStock()} units</p>
-          </div>
-        </div>
-
-        <div className="summary-card">
-          <div className="summary-icon" style={{ backgroundColor: '#fef3c7' }}>
-            <AlertTriangle size={24} color="#92400e" />
-          </div>
-          <div className="summary-content">
-            <p className="summary-label">Low Stock</p>
-            <p className="summary-value">{getLowStockCount()}</p>
-          </div>
-        </div>
-
-        <div className="summary-card">
-          <div className="summary-icon" style={{ backgroundColor: '#fee2e2' }}>
-            <AlertTriangle size={24} color="#991b1b" />
-          </div>
-          <div className="summary-content">
-            <p className="summary-label">Out of Stock</p>
-            <p className="summary-value">{getOutOfStockCount()}</p>
-          </div>
-        </div>
-      </div>
-
-      {filteredItems.length === 0 ? (
-        <div className="card empty-state">
-          <Package size={64} />
-          <h3>No items found</h3>
-          <p>Add products in your goods catalogue to see them here.</p>
-        </div>
-      ) : (
-        <div className="card">
-          <div className="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>Item Name</th>
-                  <th>Category</th>
-                  <th>Price</th>
-                  <th>Stock Level</th>
-                  <th>Status</th>
-                  <th>Last Updated</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredItems.map(item => {
-                  const status = getStockStatus(item.stockLevel);
-                  return (
-                    <tr key={item.id}>
-                      <td className="item-name">{item.name}</td>
-                      <td>{item.category || 'General'}</td>
-                      <td className="item-price">${item.price.toFixed(2)}</td>
-                      <td className="stock-level">
-                        <span className={`stock-badge ${status.className}`}>
-                          {item.stockLevel} units
-                        </span>
-                      </td>
-                      <td>
-                        <span className={`status-badge ${status.className}`}>
-                          {status.icon}
-                          {status.label}
-                        </span>
-                      </td>
-                      <td className="last-updated">
-                        {item.lastUpdated
-                          ? format(new Date(item.lastUpdated), 'MMM dd, yyyy')
-                          : 'Never'}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
     </div>
-  );
-}
+
+    <div className="info-banner">
+      <Info size={20} />
+      <div>
+        <p className="banner-title">Stock Management Coming Soon</p>
+        <p className="banner-text">
+          This screen currently shows stock levels for reference only. Automatic stock updates
+          when sales are made will be added in a future version.
+        </p>
+      </div>
+    </div>
+
+    {/* Table wrapper with sticky header */}
+    {filteredItems.length === 0 ? (
+      <div className="card empty-state">
+        <Package size={64} />
+        <h3>No items found</h3>
+        <p>Add products in your goods catalogue to see them here.</p>
+      </div>
+    ) : (
+      <div className="card">
+        <div className="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Item Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock Level</th>
+                <th>Status</th>
+                <th>Last Updated</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredItems.map(item => {
+                const status = getStockStatus(item.stockLevel);
+                return (
+                  <tr key={item.id}>
+                    <td className="item-name">{item.name}</td>
+                    <td>{item.category || 'General'}</td>
+                    <td className="item-price">${item.price.toFixed(2)}</td>
+                    <td className="stock-level">
+                      <span className={`stock-badge ${status.className}`}>
+                        {item.stockLevel} units
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`status-badge ${status.className}`}>
+                        {status.icon}
+                        {status.label}
+                      </span>
+                    </td>
+                    <td className="last-updated">
+                      {item.lastUpdated
+                        ? format(new Date(item.lastUpdated), 'MMM dd, yyyy')
+                        : 'Never'}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )}
+  </div>
+);
 
 export default Inventory;
