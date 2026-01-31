@@ -4,6 +4,7 @@
   flex-direction: column;
 }
 
+/* Topbar: always sticky at top */
 .app-header {
   background-color: var(--surface);
   border-bottom: 1px solid var(--border);
@@ -59,6 +60,7 @@
   color: var(--text-secondary);
 }
 
+/* Layout under the topbar: nav + main content */
 .app-layout {
   flex: 1;
   display: flex;
@@ -67,6 +69,7 @@
   margin: 0 auto;
 }
 
+/* Main navigation bar (icons row) – NOT sticky */
 .app-nav {
   width: 240px;
   background-color: var(--surface);
@@ -100,12 +103,14 @@
   border-left-color: var(--primary-color);
 }
 
+/* Screen content area (where Inventory lives) */
 .app-main {
   flex: 1;
   padding: 2rem;
   overflow-y: auto;
 }
 
+/* Offline banner */
 .offline-banner {
   position: fixed;
   bottom: 1rem;
@@ -136,6 +141,7 @@
   }
 }
 
+/* Tablet and down: nav becomes top icon row (still not sticky by itself) */
 @media (max-width: 1024px) {
   .app-layout {
     flex-direction: column;
@@ -169,6 +175,7 @@
   }
 }
 
+/* Small phones */
 @media (max-width: 640px) {
   .header-content {
     padding: 1rem;
