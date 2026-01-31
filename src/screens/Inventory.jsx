@@ -59,7 +59,6 @@ function Inventory() {
       const text = await file.text();
       const data = JSON.parse(text);
 
-      // Assume data has `goods` and `inventory` arrays
       setGoods(data.goods || []);
       setInventory(data.inventory || []);
     } catch (error) {
@@ -85,7 +84,7 @@ function Inventory() {
 
   return (
     <div className="inventory">
-      {/* Sticky header with buttons */}
+      {/* Screen Header - will be sticky under app-header */}
       <div className="inventory-header">
         <div>
           <h2 className="screen-title">Inventory</h2>
@@ -110,7 +109,7 @@ function Inventory() {
         style={{ display: 'none' }}
       />
 
-      {/* Table */}
+      {/* Content card with search + table */}
       {filteredItems.length === 0 ? (
         <div className="card empty-state">
           <Package size={64} />
@@ -118,58 +117,65 @@ function Inventory() {
           <p>Import a database to see items here.</p>
         </div>
       ) : (
-        <div className="card">
-          <div className="search-box">
-            <Search size={18} />
-            <input
-              type="text"
-              className="input-field"
-              placeholder="Search items..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+        <div className="content-card">
+          {/* Search bar - inside scrollable content */}
+          <div className="search-section">
+            <div className="search-box">
+              <Search size={18} />
+              <input
+                type="text"
+                className="input-field"
+                placeholder="Search items..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
           </div>
-          <div className="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>Item Name</th>
-                  <th>Category</th>
-                  <th>Price</th>
-                  <th>Stock Level</th>
-                  <th>Status</th>
-                  <th>Last Updated</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredItems.map(item => {
-                  const status = getStockStatus(item.stockLevel);
-                  return (
-                    <tr key={item.id}>
-                    <td className="item-name">{item.name}</td>
-                    <td>{item.category || 'General'}</td>
-                    <td className="item-price">${item.price.toFixed(2)}</td>
-                    <td className="stock-level">
-                      <span className={`stock-badge ${status.className}`}>
-                        {item.stockLevel} units
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`status-badge ${status.className}`}>
-                        {status.icon}
-                        {status.label}
-                      </span>
-                    </td>
-                    <td className="last-updated">
-                      {item.lastUpdated
-                        ? format(new Date(item.lastUpdated), 'MMM dd, yyyy')
-                        : 'Never'}
-                    </td>
+
+          {/* Table container */}
+          <div className="table-wrapper">
+            <div className="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Item Name</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock Level</th>
+                    <th>Status</th>
+                    <th>Last Updated</th>
                   </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filteredItems.map(item => {
+                    const status = getStockStatus(item.stockLevel);
+                    return (
+                      <tr key={item.id}>
+                        <td className="item-name">{item.name}</td>
+                        <td>{item.category || 'General'}</td>
+                        <td className="item-price">${item.price.toFixed(2)}</td>
+                        <td className="stock-level">
+                          <span className={`stock-badge ${status.className}`}>
+                            {item.stockLevel} units
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`status-badge ${status.className}`}>
+                            {status.icon}
+                            {status.label}
+                          </span>
+                        </td>
+                        <td className="last-updated">
+                          {item.lastUpdated
+                            ? format(new Date(item.lastUpdated), 'MMM dd, yyyy')
+                            : 'Never'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
