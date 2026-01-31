@@ -5,13 +5,13 @@
   flex-direction: column;
 }
 
-/* Screen Header - STICKS under app-header when scrolled */
+/* Screen Header - moved up closer to nav strip */
 .inventory-header {
   background: white;
-  padding: 1.5rem;
+  padding: 1rem 1.5rem; /* Reduced top/bottom padding */
   border-bottom: 1px solid var(--border);
   position: sticky;
-  top: 68px; /* Height of app-header (56px + 12px padding) */
+  top: 58px; /* Reduced from 68px - now 10px closer to nav strip */
   z-index: 50;
   box-shadow: var(--shadow-sm);
 }
@@ -35,18 +35,19 @@
   margin: 0;
 }
 
-/* Header buttons */
+/* Header buttons - 2-column layout, 75% smaller width, 25% smaller font */
 .header-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Two equal columns */
   gap: 0.75rem;
   margin-top: 1rem;
 }
 
 .btn {
-  padding: 0.625rem 1.25rem;
+  padding: 0.5rem 0.75rem; /* Reduced padding (75% width) */
   border-radius: 0.5rem;
   border: 1px solid;
-  font-size: 0.9rem;
+  font-size: 0.675rem; /* Reduced 25% from 0.9rem */
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -75,7 +76,7 @@
   background: #d1fae5;
 }
 
-/* Content card (scrolls under sticky header) */
+/* Rest of the CSS stays exactly the same */
 .content-card {
   flex: 1;
   display: flex;
@@ -86,6 +87,8 @@
   overflow: hidden;
   margin: 1.5rem;
 }
+
+/* ... [all other styles remain unchanged] ... */
 
 .empty-state {
   flex: 1;
