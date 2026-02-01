@@ -1,6 +1,6 @@
 # Android APK Build Guide
 
-This guide will help you build the Kadaele POS app as an Android APK that you can install on Android devices.
+This guide will help you build the Kadaele Services Shopkeeper app as an Android APK that you can install on Android devices.
 
 ## Prerequisites
 
@@ -33,7 +33,7 @@ This guide will help you build the Kadaele POS app as an Android APK that you ca
 ### Windows
 
 1. **Open Command Prompt or PowerShell**
-   - Navigate to the kadaele-pos folder
+   - Navigate to the kadaele-services-shopkeeper folder
    ```cmd
    cd path\to\kadaele-pos
    ```
@@ -52,15 +52,15 @@ This guide will help you build the Kadaele POS app as an Android APK that you ca
    - Takes 5-10 minutes on first run
 
 4. **Find your APK**
-   - Location: `kadaele-pos-debug.apk` (in the root folder)
+   - Location: `kadaele-services-shopkeeper-debug.apk` (in the root folder)
    - Or: `android\app\build\outputs\apk\debug\app-debug.apk`
 
 ### Mac/Linux
 
 1. **Open Terminal**
-   - Navigate to the kadaele-pos folder
+   - Navigate to the kadaele-shopkeeper folder
    ```bash
-   cd path/to/kadaele-pos
+   cd path/to/kadaele-shopkeeper 
    ```
 
 2. **Make the script executable**
@@ -74,7 +74,7 @@ This guide will help you build the Kadaele POS app as an Android APK that you ca
    ```
 
 4. **Find your APK**
-   - Location: `kadaele-pos-debug.apk` (in the root folder)
+   - Location: `kadaele-services-shopkeeper-debug.apk` (in the root folder)
    - Or: `android/app/build/outputs/apk/debug/app-debug.apk`
 
 ## Method 2: Manual Build (Step by Step)
