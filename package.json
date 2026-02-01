@@ -1,5 +1,5 @@
 {
-  "name": "kadaele-pos",
+  "name": "kadaele-services",
   "version": "1.0.0",
   "description": "Cash Register and Sales Management App",
   "main": "electron/main.js",
