@@ -69,7 +69,7 @@ function App() {
       <div className="app">
         <header className="app-header">
           <div className="header-content">
-            <h1 className="app-title">Kadaele POS</h1>
+            <h1 className="app-title">Kadaele Services Shopkeeper</h1>
             <div className="header-status">
               <div className={`status-badge ${isOnline ? 'online' : 'offline'}`}>
                 {isOnline ? <Wifi size={16} /> : <WifiOff size={16} />}
