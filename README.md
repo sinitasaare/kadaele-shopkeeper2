@@ -332,8 +332,8 @@ Update shop name and colors in `src/index.css`:
 Add your logo to credit notes in `src/screens/Debtors.jsx`:
 ```jsx
 <div className="note-header">
-  <img src="/logo.png" alt="Shop Logo" />
-  <h2>Your Shop Name</h2>
+  <img src="/ic_launcher_foreground.png" alt="Business Logo" />
+  <h2>Kadaele Services Shop</h2>
 </div>
 ```
 
