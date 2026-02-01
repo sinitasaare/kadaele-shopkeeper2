@@ -395,4 +395,4 @@ For issues or questions:
 
 ---
 
-**Built with ❤️ for Kadaele Shop**
+**Built with ❤️ by sinitasaare.com for Kadaele Services Shop**
