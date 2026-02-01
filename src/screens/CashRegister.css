@@ -480,7 +480,7 @@
   background-color: #0056b3;
 }
 
-/* Responsive Design - FIXED BUTTONS */
+/* Responsive Design - Buy on Credit 35% on mobile */
 @media (max-width: 768px) {
   .container {
     max-width: 100%;
@@ -495,14 +495,19 @@
     width: 80%;
   }
 
-  /* ✅ Buttons STAY HORIZONTAL 45% width on portrait */
+  /* ✅ Buttons STAY HORIZONTAL */
   .payment-buttons {
     gap: 8px;
   }
 
-  .btn-pay-cash,
+  .btn-pay-cash {
+    flex: 0 0 55%; /* Cash takes more space */
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+
   .btn-pay-credit {
-    flex: 0 0 45%;
+    flex: 0 0 35%; /* Credit 10% narrower (35% instead of 45%) */
     padding: 8px 12px;
     font-size: 0.8rem;
   }
