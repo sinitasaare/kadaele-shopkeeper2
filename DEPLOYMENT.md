@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This guide covers deploying Kadaele POS to various platforms.
+This guide covers deploying Kadaele Services Shopkeeper to various platforms.
 
 ## Web Deployment
 
