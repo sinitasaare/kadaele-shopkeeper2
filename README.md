@@ -1,4 +1,4 @@
-# Kadaele POS - Cash Register & Sales Management App
+# Kadaele Services Shopkeeper - Cash Register & Sales Management App
 
 A modern, offline-first Point of Sale (POS) system built with React, Capacitor, and Electron. Designed for small shops to manage sales, track credit customers, and monitor inventory.
 
