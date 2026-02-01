@@ -47,7 +47,7 @@ A modern, offline-first Point of Sale (POS) system built with React, Capacitor, 
 ## Project Structure
 
 ```
-kadaele-pos/
+kadaele-services-shopkeeper/
 ├── src/
 │   ├── screens/           # Main application screens
 │   │   ├── CashRegister.jsx
