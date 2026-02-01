@@ -62,7 +62,7 @@ This guide covers deploying Kadaele POS to various platforms.
        "predeploy": "npm run build",
        "deploy": "gh-pages -d dist"
      },
-     "homepage": "https://yourusername.github.io/kadaele-pos"
+     "homepage": "https://sinitasaare.github.io/kadaele-pos"
    }
    ```
 
@@ -85,8 +85,8 @@ This guide covers deploying Kadaele POS to various platforms.
    ```json
    {
      "build": {
-       "appId": "com.kadaele.pos",
-       "productName": "Kadaele POS",
+       "appId": "com.sinitasaare.kadaeleshopkeeper",
+       "productName": "Kadaele Services Shopkeeper",
        "win": {
          "target": ["nsis", "portable"],
          "icon": "build/icon.ico"
@@ -96,8 +96,8 @@ This guide covers deploying Kadaele POS to various platforms.
    ```
 
 3. **Output**
-   - Installer: `dist/Kadaele POS Setup.exe`
-   - Portable: `dist/Kadaele POS.exe`
+   - Installer: `dist/Kadaele Services Shopkeeper Setup.exe`
+   - Portable: `dist/Kadaele Services Shopkeeper.exe`
 
 ### macOS
 
@@ -183,7 +183,7 @@ This guide covers deploying Kadaele POS to various platforms.
    storePassword=your-store-password
    keyPassword=your-key-password
    keyAlias=kadaele
-   storeFile=../kadaele-pos.keystore
+   storeFile=../kadaele-services-shopkeeper.keystore
    ```
 
 3. **Update `android/app/build.gradle`**
@@ -218,7 +218,7 @@ This guide covers deploying Kadaele POS to various platforms.
 1. **Create Google Play Console account**
 2. **Upload AAB file** (preferred over APK)
 3. **Fill in store listing**
-   - App name: Kadaele POS
+   - App name: Kadaele Services Shopkeeper
    - Description: Cash register and sales management
    - Screenshots: Capture from different screens
    - Icon: 512x512 PNG
@@ -249,7 +249,7 @@ This guide covers deploying Kadaele POS to various platforms.
 
 1. **Configure App ID**
    - Go to Apple Developer portal
-   - Create App ID: com.kadaele.pos
+   - Create App ID: com.sinitasaare.Kadaeleshopkeeper
    - Enable required capabilities
 
 2. **Create Provisioning Profile**
@@ -274,7 +274,7 @@ This guide covers deploying Kadaele POS to various platforms.
    ```json
    {
      "name": "Kadaele POS",
-     "short_name": "KadaelePOS",
+     "short_name": "KadaeleServicesShopkeeper",
      "description": "Cash register and sales management",
      "start_url": "/",
      "display": "standalone",
@@ -300,7 +300,7 @@ This guide covers deploying Kadaele POS to various platforms.
    // public/sw.js
    self.addEventListener('install', (event) => {
      event.waitUntil(
-       caches.open('kadaele-pos-v1').then((cache) => {
+       caches.open('kadaele-services-shopkeeper-v1').then((cache) => {
          return cache.addAll([
            '/',
            '/index.html',
