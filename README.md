@@ -207,8 +207,8 @@ The app is designed to sync with a cloud backend called "kadaele-services". To i
 Create a `.env` file in the root directory:
 ```env
 VITE_API_URL=https://your-backend.com/api
-VITE_STORAGE_KEY=kadaele-pos
-VITE_SHOP_NAME=Your Shop Name
+VITE_STORAGE_KEY=kadaele-services-shopkeeper
+VITE_SHOP_NAME=Kadaele Services
 ```
 
 Access in code:
