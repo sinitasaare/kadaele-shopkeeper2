@@ -50,25 +50,25 @@ echo "🔄 Syncing Capacitor..."
 npx cap sync android
 echo ""
 
-# Build APK
+# Build APK (UNIVERSAL - 1 APK only)
 echo "🏗️  Building Android APK..."
 cd android
 chmod +x gradlew
-./gradlew assembleDebug
+./gradlew assembleUniversalDebug
 cd ..
 echo ""
 
 # Check if APK was created
-if [ -f "android/app/build/outputs/apk/debug/app-debug.apk" ]; then
+if [ -f "android/app/build/outputs/apk/debug/app-universal-debug.apk" ]; then
     echo "✅ SUCCESS! APK built successfully!"
     echo ""
-    echo "📍 APK Location: android/app/build/outputs/apk/debug/app-debug.apk"
+    echo "📍 APK Location: android/app/build/outputs/apk/debug/app-universal-debug.apk"
     echo ""
     echo "📲 You can now install this APK on your Android device."
     echo ""
-    
+
     # Copy APK to root for easy access
-    cp android/app/build/outputs/apk/debug/app-debug.apk ./kadaele-pos-debug.apk
+    cp android/app/build/outputs/apk/debug/app-universal-debug.apk ./kadaele-pos-debug.apk
     echo "📋 APK also copied to: ./kadaele-pos-debug.apk"
 else
     echo "❌ Build failed. Check the output above for errors."
