@@ -1,6 +1,6 @@
 {
-  "appId": "com.kadaele.pos",
-  "appName": "Kadaele POS",
+  "appId": "com.sinitasaare.kadaele-shopkeeoer",
+  "appName": "Kadaele Shopkeeper",
   "webDir": "dist",
   "server": {
     "androidScheme": "https"
